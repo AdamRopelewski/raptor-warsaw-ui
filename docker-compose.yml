@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  frontend:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      FLASK_APP: app/app.py
+      FLASK_ENV: development
+      EXTERNAL_API_URL: "http://transit-service:8080/routing/connections"
+    depends_on:
+      - transit-service
+
+  transit-service:
+    image: ghcr.io/naviqore/public-transit-service:latest
+    environment:
+      GTFS_STATIC_URI: "https://mkuran.pl/gtfs/warsaw.zip"
+    ports:
+      - "8081:8080"  #  external access
