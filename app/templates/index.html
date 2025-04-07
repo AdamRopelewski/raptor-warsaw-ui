@@ -1,19 +1,17 @@
 <!DOCTYPE html>
 <html>
-
 <head>
     <title>Routing Map</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <link rel="stylesheet" href="/static/css/styles.css" />
 </head>
-
 <body>
     <div id="controls">
         <div class="control-group">
             <label for="dateTime">Data i czas:</label>
             <input type="datetime-local" id="dateTime" required>
         </div>
-
+        
         <div class="control-group">
             <label for="timeType">Typ czasu:</label>
             <select id="timeType">
@@ -43,7 +41,12 @@
         </div>
 
         <button id="findRoute">Znajdź trasę</button>
-        <button id="clearRoute" style="background: #f44336;">Wyczyść trasę</button>
+        <button id="clearRoute">Wyczyść trasę</button>
+    </div>
+
+    <div id="api-request-box">
+        <h3>Zapytanie API:</h3>
+        <div id="api-request-content">Wybierz punkty aby wygenerować zapytanie</div>
     </div>
 
     <div id="map"></div>
@@ -51,5 +54,4 @@
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <script src="/static/js/script.js"></script>
 </body>
-
 </html>
