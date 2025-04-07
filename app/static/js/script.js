@@ -96,6 +96,7 @@ async function fetchRoute() {
         const response = await fetch(`/routing/connections?${new URLSearchParams(requestParams)}`);
         const data = await response.json();
         updateApiRequestBox(requestParams);
+        updateRouteSummaryBox(data[0]);
         drawRoute(data, requestParams);
         return data;
     } catch (error) {
@@ -325,4 +326,170 @@ function getCoordinatesForLeg(leg) {
     }
 
     return [];
+}
+
+function updateRouteSummaryBox(route) {
+    const summaryBox = document.getElementById('route-summary-content');
+    if (!route || !route.legs || route.legs.length === 0) {
+        summaryBox.innerHTML = "<p>Brak danych trasy</p>";
+        return;
+    }
+    
+    const legs = route.legs;
+    const journeyStart = legs[0].departureTime;
+    const journeyEnd = legs[legs.length - 1].arrivalTime;
+    
+    // Calculate total travel time
+    const startTime = new Date(journeyStart);
+    const endTime = new Date(journeyEnd);
+    const totalSeconds = Math.round((endTime - startTime) / 1000);
+    const totalDuration = formatDuration(totalSeconds);
+    
+    // Calculate walking time
+    let walkingSeconds = 0;
+    let walkingDistance = 0;
+    let transfers = 0;
+    const transferTimes = [];
+    const transportLegs = [];
+    
+    // Process each leg
+    legs.forEach((leg, index) => {
+        if (leg.type === 'WALK') {
+            // Calculate walking time
+            const walkStart = new Date(leg.departureTime);
+            const walkEnd = new Date(leg.arrivalTime);
+            walkingSeconds += Math.round((walkEnd - walkStart) / 1000);
+            
+            // Estimate walking distance (if we had coordinates we could calculate more accurately)
+            if (leg.from && leg.to) {
+                const lat1 = leg.from.latitude;
+                const lon1 = leg.from.longitude;
+                const lat2 = leg.to.latitude;
+                const lon2 = leg.to.longitude;
+                walkingDistance += haversineDistance(lat1, lon1, lat2, lon2);
+            }
+        } else if (leg.type === 'ROUTE') {
+            // Count transport legs
+            transportLegs.push({
+                line: leg.trip.route.shortName,
+                type: leg.trip.route.transportMode,
+                from: leg.fromStop.name,
+                to: leg.toStop.name,
+                departure: leg.departureTime,
+                arrival: leg.arrivalTime,
+                duration: formatDuration(Math.round((new Date(leg.arrivalTime) - new Date(leg.departureTime)) / 1000))
+            });
+            
+            // Count transfers (except first leg)
+            if (index > 0) {
+                transfers++;
+                
+                // Calculate transfer time
+                const prevLeg = legs[index - 1];
+                const transferStart = new Date(prevLeg.arrivalTime);
+                const transferEnd = new Date(leg.departureTime);
+                const waitSeconds = Math.round((transferEnd - transferStart) / 1000);
+                if (waitSeconds > 0) {
+                    transferTimes.push({
+                        from: prevLeg.toStop?.name || 'Pieszo',
+                        to: leg.fromStop?.name || 'Pieszo',
+                        duration: formatDuration(waitSeconds),
+                        time: `${formatTime(prevLeg.arrivalTime)} → ${formatTime(leg.departureTime)}`
+                    });
+                }
+            }
+        }
+    });
+    
+    // Format walking distance
+    const walkingDistanceText = walkingDistance > 0 ? 
+        `${Math.round(walkingDistance)} m` : 'brak danych';
+    
+    // Build summary content
+    let content = `
+        <div class="route-summary-header">
+            <h3>Podsumowanie Trasy:</h3>
+            <p><strong>Czas podróży:</strong> ${totalDuration}</p>
+            <p><strong>Od:</strong> ${legs[0].fromStop?.name || 'Start'} (${formatTime(journeyStart)})</p>
+            <p><strong>Do:</strong> ${legs[legs.length - 1].toStop?.name || 'Koniec'} (${formatTime(journeyEnd)})</p>
+            <p><strong>Przesiadki:</strong> ${transfers}</p>
+            <p><strong>Pieszo:</strong> ${formatDuration(walkingSeconds)} (${walkingDistanceText})</p>
+        </div>
+    `;
+    
+    // Add transport legs
+    if (transportLegs.length > 0) {
+        content += `
+            <div class="transport-legs">
+                <h4>Środki transportu:</h4>
+                <ul>
+        `;
+        
+        transportLegs.forEach(leg => {
+            content += `
+                <li>
+                    <span class="line-badge" style="background-color: ${getColorForLegType(leg.type)}">
+                        ${leg.line}
+                    </span>
+                    ${leg.type} (${leg.duration})<br>
+                    <small>${formatTime(leg.departure)} → ${leg.from} → ${leg.to}</small>
+                </li>
+            `;
+        });
+        
+        content += `</ul></div>`;
+    }
+    
+    // Add transfer details
+    if (transferTimes.length > 0) {
+        content += `
+            <div class="transfer-times">
+                <h4>Przesiadki:</h4>
+                <ul>
+        `;
+        
+        transferTimes.forEach((transfer, index) => {
+            content += `
+                <li>
+                    <strong>Przesiadka ${index + 1}:</strong> ${transfer.duration}<br>
+                    <small>${transfer.time}</small><br>
+                    <small>${transfer.from} → ${transfer.to}</small>
+                </li>
+            `;
+        });
+        
+        content += `</ul></div>`;
+    }
+    
+    summaryBox.innerHTML = content;
+}
+
+// Helper function to calculate distance between two points in meters
+function haversineDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371e3; // Earth radius in meters
+    const φ1 = lat1 * Math.PI/180;
+    const φ2 = lat2 * Math.PI/180;
+    const Δφ = (lat2-lat1) * Math.PI/180;
+    const Δλ = (lon2-lon1) * Math.PI/180;
+
+    const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+              Math.cos(φ1) * Math.cos(φ2) *
+              Math.sin(Δλ/2) * Math.sin(Δλ/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+    return R * c;
+}
+
+function formatTime(timeString) {
+    if (!timeString) return '--:--';
+    const d = new Date(timeString);
+    return d.getHours().toString().padStart(2, '0') + ':' + 
+           d.getMinutes().toString().padStart(2, '0');
+}
+
+function formatDuration(seconds) {
+    if (!seconds) return '0 min';
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return mins > 0 ? `${mins} min` : `${secs} sec`;
 }

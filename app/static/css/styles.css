@@ -34,7 +34,7 @@ html {
 #api-request-box {
     position: absolute;
     bottom: 20px;
-    right: 20px;
+    left: 20px;
     z-index: 1000;
     background: rgba(255, 255, 255, 0.95);
     padding: 10px;
@@ -55,9 +55,106 @@ html {
     padding-bottom: 5px;
 }
 
-#api-request-content {
-    word-break: break-all;
-    white-space: pre-wrap;
+/* Box z podsumowaniem trasy */
+#route-summary-box {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.25);
+    width: 350px;
+    max-height: 40vh; /* Lepsze niż stała wartość */
+    overflow-y: auto; /* Tylko pionowy scroll */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Lepsza czytelność */
+    font-size: 13px;
+    line-height: 1.4;
+    border: 1px solid #ddd;
+}
+
+#route-summary-box h3 {
+    margin: 0 0 10px 0;
+    color: #2c3e50;
+    font-size: 16px;
+    font-weight: 600;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 8px;
+}
+
+#route-summary-box h4 {
+    margin: 15px 0 8px 0;
+    color: #34495e;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+#route-summary-box ul {
+    margin: 5px 0;
+    padding-left: 20px;
+}
+
+#route-summary-box li {
+    margin-bottom: 8px;
+}
+
+/* Style dla line-badge */
+.line-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 3px;
+    color: white;
+    font-weight: bold;
+    font-size: 12px;
+    margin-right: 5px;
+    min-width: 20px;
+    text-align: center;
+}
+
+/* Style dla różnych typów transportu */
+.transport-legs li {
+    background: #f8f9fa;
+    padding: 8px;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    border-left: 3px solid #3498db;
+}
+
+.transfer-times li {
+    background: #f0f3f5;
+    padding: 8px;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    border-left: 3px solid #e74c3c;
+}
+
+/* Responsywność */
+@media (max-width: 768px) {
+    #route-summary-box {
+        width: 280px;
+        font-size: 12px;
+        padding: 10px;
+    }
+}
+
+/* Scrollbar */
+#route-summary-box::-webkit-scrollbar {
+    width: 8px;
+}
+
+#route-summary-box::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+#route-summary-box::-webkit-scrollbar-thumb {
+    background: #bdc3c7;
+    border-radius: 4px;
+}
+
+#route-summary-box::-webkit-scrollbar-thumb:hover {
+    background: #95a5a6;
 }
 
 /* Style dla przystanków */
