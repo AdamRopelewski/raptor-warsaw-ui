@@ -179,7 +179,10 @@ function drawRoute(routes, requestParams) {
                                 if (!stopTime.stop?.coordinates) return;
 
                                 // Now, consider a stop transfer if both fromStop and toStop exist and the route type is "ROUTE"
-                                const isTransferStop = (leg.fromStop && leg.toStop && leg.trip?.route?.type === 'ROUTE') && (stopIndex === 0);
+                                const isTransferStop = (
+                                    (leg.fromStop && stopTime.stop.id === leg.fromStop.id) ||
+                                    (leg.toStop && stopTime.stop.id === leg.toStop.id)
+                                );
                                 const isTerminal = stopIndex === 0 || stopIndex === leg.trip.stopTimes.length - 1;
 
                                 const marker = L.marker([
