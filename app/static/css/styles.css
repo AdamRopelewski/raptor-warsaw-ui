@@ -1,71 +1,69 @@
-/* Map and controls layout */
+/* Reset i podstawowe style */
+body,
+html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: Arial, sans-serif;
+    overflow: hidden;
+}
+
+/* Kontener mapy - teraz pełna strona */
 #map {
-    height: 600px;
-    width: 70%;
-    float: left;
+    height: 100vh;
+    width: 100vw;
+    position: relative;
 }
 
+/* Panel kontrolny - teraz w lewym górnym rogu */
 #controls {
-    width: 28%;
-    float: left;
-    padding: 1%;
-    box-sizing: border-box;
+    position: absolute;
+    top: 10px;
+    left: 50px;
+    z-index: 1000;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 15px;
+    border-radius: 5px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+    width: 300px;
+    max-height: 90vh;
+    overflow-y: auto;
 }
 
-/* Form controls */
-.control-group {
-    margin: 10px 0;
-}
-
-label {
-    display: block;
-    margin: 5px 0;
-    font-weight: bold;
-    color: #333;
-}
-
-input, select {
-    width: 100%;
-    padding: 8px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    box-sizing: border-box;
-}
-
-/* Buttons */
-button {
-    color: white;
-    border: none;
-    padding: 10px 15px;
-    width: 100%;
-    cursor: pointer;
-    margin-top: 10px;
-    border-radius: 4px;
-    font-weight: bold;
-    transition: background-color 0.3s;
-}
-
-#findRoute {
-    background: #4CAF50;
-}
-
-#findRoute:hover {
-    background: #45a049;
-}
-
-#clearRoute {
-    background: #f44336;
-}
-
-#clearRoute:hover {
-    background: #d32f2f;
-}
-
-/* Map markers and popups */
-.stop-icon {
+/* Box z zapytaniem API */
+#api-request-box {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    width: 400px;
+    max-height: 200px;
+    overflow: auto;
+    font-family: monospace;
     font-size: 12px;
+}
+
+#api-request-box h3 {
+    margin-top: 0;
+    color: #333;
+    font-size: 14px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 5px;
+}
+
+#api-request-content {
+    word-break: break-all;
+    white-space: pre-wrap;
+}
+
+/* Style dla przystanków */
+.stop-icon {
     text-align: center;
-    cursor: pointer;
+    font-size: 14px;
     transition: transform 0.2s;
 }
 
@@ -73,47 +71,88 @@ button {
     transform: scale(1.5);
 }
 
+/* Specjalny styl dla przystanków przesiadkowych */
+.stop-icon.transfer {
+    font-size: 16px;
+    color: #ff00ff;
+    /* Różowy dla przesiadek */
+}
+
+/* Style dla popupów */
 .leaflet-popup-content {
+    margin: 8px;
     font-size: 14px;
-    line-height: 1.5;
+    line-height: 1.4;
     min-width: 200px;
 }
 
-.leaflet-popup-content b {
-    color: #333;
-}
-
-.route-popup {
-    font-family: Arial, sans-serif;
-    line-height: 1.5;
-}
-
 .stop-popup h3 {
-    margin-top: 0;
+    margin: 0 0 5px 0;
     color: #2c3e50;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 5px;
+    font-size: 16px;
 }
 
-.lines-list ul {
-    padding-left: 15px;
+.stop-popup p {
     margin: 5px 0;
 }
 
-.line-badge {
-    display: inline-block;
-    color: white;
-    font-weight: bold;
-    padding: 2px 6px;
-    border-radius: 3px;
-    margin-right: 5px;
-    font-size: 0.9em;
+/* Kolory dla typów transportu */
+.route-walk {
+    color: #ff0000;
 }
 
-/* Transport type colors */
-.walk { color: #ff0000 !important; }
-.bus { color: #0066ff !important; }
-.tram { color: #00aa00 !important; }
-.subway { color: #ff6600 !important; }
-.rail { color: #9900cc !important; }
-.ferry { color: #0099cc !important; }
+.route-bus {
+    color: #0066ff;
+}
+
+.route-tram {
+    color: #00aa00;
+}
+
+.route-subway {
+    color: #ff6600;
+}
+
+.route-rail {
+    color: #9900cc;
+}
+
+/* Przyciski i formularze */
+button {
+    background: #4CAF50;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    width: 100%;
+    cursor: pointer;
+    margin-top: 8px;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+button:hover {
+    opacity: 0.9;
+}
+
+#clearRoute {
+    background: #f44336;
+}
+
+.control-group {
+    margin-bottom: 12px;
+}
+
+label {
+    display: block;
+    margin-bottom: 4px;
+    font-weight: bold;
+}
+
+input,
+select {
+    width: 100%;
+    padding: 6px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
