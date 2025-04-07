@@ -30,14 +30,14 @@ function setMarker(type, latlng) {
         if (startMarker) map.removeLayer(startMarker);
         startMarker = L.marker(latlng, {
             draggable: true,
-            icon: L.divIcon({className: 'start-icon', html: '🟢'})
+            icon: L.divIcon({ className: 'start-icon', html: '🟢' })
         }).addTo(map);
         startMarker.bindPopup('Punkt startowy').openPopup();
     } else {
         if (endMarker) map.removeLayer(endMarker);
         endMarker = L.marker(latlng, {
             draggable: true,
-            icon: L.divIcon({className: 'end-icon', html: '🔴'})
+            icon: L.divIcon({ className: 'end-icon', html: '🔴' })
         }).addTo(map);
         endMarker.bindPopup('Punkt końcowy').openPopup();
     }
@@ -79,7 +79,7 @@ document.getElementById('clearRoute').addEventListener('click', () => {
 });
 
 async function fetchRoute() {
-    const params = new URLSearchParams({
+    const requestParams = {
         sourceLatitude: startMarker.getLatLng().lat,
         sourceLongitude: startMarker.getLatLng().lng,
         targetLatitude: endMarker.getLatLng().lat,
@@ -90,20 +90,35 @@ async function fetchRoute() {
         maxTransferNumber: document.getElementById('maxTransferNumber').value,
         minTransferTime: document.getElementById('minTransferTime').value,
         maxTravelTime: document.getElementById('maxTravelTime').value
-    });
+    };
 
-    const response = await fetch(`/routing/connections?${params}`);
-    if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+    try {
+        const response = await fetch(`/routing/connections?${new URLSearchParams(requestParams)}`);
+        const data = await response.json();
+        updateApiRequestBox(requestParams);
+        drawRoute(data, requestParams);
+        return data;
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Błąd podczas wyszukiwania trasy: ' + error.message);
     }
-    return await response.json();
 }
 
-function drawRoute(routes) {
+function updateApiRequestBox(params) {
+    let apiUrl = '';
+    if (!params || Object.keys(params).length === 0) {
+        apiUrl = "Brak parametrów trasy";
+    } else {
+        apiUrl = `${window.location.origin}/routing/connections?${new URLSearchParams(params)}`;
+    }
+    document.getElementById('api-request-content').textContent = apiUrl;
+}
+
+function drawRoute(routes, requestParams) {
+
     // 1. Sprawdzenie poprawności danych wejściowych
     if (!routes || !Array.isArray(routes)) {
         console.error('Invalid routes data:', routes);
-        alert('Otrzymano nieprawidłowe dane trasy');
         return;
     }
 
@@ -115,7 +130,7 @@ function drawRoute(routes) {
 
     // 3. Inicjalizacja nowej warstwy
     currentRoute = L.layerGroup().addTo(map);
-    
+
     try {
         // 4. Przetwarzanie każdej znalezionej trasy
         routes.forEach((route, routeIndex) => {
@@ -130,7 +145,7 @@ function drawRoute(routes) {
                     // 5a. Ustawienie stylu w zależności od typu transportu
                     const color = getColorForLegType(leg.type);
                     const coordinates = getCoordinatesForLeg(leg);
-                    
+
                     if (!coordinates || coordinates.length < 2) {
                         console.warn(`Missing coordinates for leg ${legIndex}`, leg);
                         return;
@@ -154,7 +169,7 @@ function drawRoute(routes) {
                                 <p><b>Do:</b> ${leg.toStop?.name || 'Koniec'}</p>
                                 <p><b>Godziny:</b> ${leg.departureTime} - ${leg.arrivalTime}</p>
                             </div>
-                        `, {maxWidth: 300});
+                        `, { maxWidth: 300 });
                     }
 
                     // 5d. Dodanie przystanków
@@ -163,18 +178,18 @@ function drawRoute(routes) {
                             try {
                                 if (!stopTime.stop?.coordinates) return;
 
-                                // Określenie typu ikony
-                                const isTransfer = stopIndex > 0 && stopIndex < leg.trip.stopTimes.length - 1;
+                                // Now, consider a stop transfer if both fromStop and toStop exist and the route type is "ROUTE"
+                                const isTransferStop = (leg.fromStop && leg.toStop && leg.trip?.route?.type === 'ROUTE') && (stopIndex === 0);
                                 const isTerminal = stopIndex === 0 || stopIndex === leg.trip.stopTimes.length - 1;
-                                
+
                                 const marker = L.marker([
                                     stopTime.stop.coordinates.latitude,
                                     stopTime.stop.coordinates.longitude
                                 ], {
                                     icon: L.divIcon({
-                                        className: `stop-icon ${isTransfer ? 'transfer' : ''} ${isTerminal ? 'terminal' : ''}`,
-                                        html: isTerminal ? '🔵' : (isTransfer ? '🟢' : '🟡'),
-                                        iconSize: [16, 16]
+                                        className: isTransferStop ? 'stop-icon transfer' : `stop-icon ${isTerminal ? 'terminal' : ''}`,
+                                        html: isTerminal ? '🔵' : (isTransferStop ? '🔀' : '🟡'),
+                                        iconSize: isTransferStop ? [20, 20] : [16, 16]
                                     }),
                                     riseOnHover: true,
                                     zIndexOffset: isTerminal ? 1000 : 0
@@ -239,7 +254,7 @@ function drawRoute(routes) {
                                 }).addTo(currentRoute);
 
                                 // Otwieranie popupu po najechaniu
-                                marker.on('mouseover', function() {
+                                marker.on('mouseover', function () {
                                     this.openPopup();
                                 });
 
@@ -260,7 +275,7 @@ function drawRoute(routes) {
                 startMarker.getLatLng(),
                 endMarker.getLatLng()
             ]);
-            
+
             // Dla długich tras dodajemy padding
             const isLongRoute = bounds.getNorthEast().distanceTo(bounds.getSouthWest()) > 5000;
             map.fitBounds(bounds, {
@@ -298,13 +313,13 @@ function getCoordinatesForLeg(leg) {
             [leg.to.latitude, leg.to.longitude]
         ];
     }
-    
+
     if (leg.trip?.stopTimes) {
         return leg.trip.stopTimes.map(st => [
             st.stop.coordinates.latitude,
             st.stop.coordinates.longitude
         ]);
     }
-    
+
     return [];
 }
